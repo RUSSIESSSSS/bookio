@@ -7,9 +7,13 @@
 
 
 from flask import Flask, render_template, request, redirect, jsonify
+from flask_cors import CORS
 from pymysql import Connect
 
 app = Flask(__name__)
+
+app.json.ensure_ascii = False  # 解决编码
+CORS(app, supports_credentials=True)  # 解决跨域:协议，域名，端口
 
 
 def get_db():
@@ -37,33 +41,29 @@ def add():
         cursor = db.cursor()
         sql = 'INSERT INTO book (book_name, book_price, book_summary,book_quantity) VALUES (%s,%s,%s,%s);'
         cursor.execute(query=sql, args=[book_name, book_price, book_summary, book_quantity])
-        db.commit()
-        cursor.close()
-        return redirect('/index')  # 添加完成之后返回到/index页
-        # return json_data   #返回请求的数据
+    # return redirect('/index')  # 添加完成之后返回到/index页
+    return json_data  # 返回请求的数据
 
 
 # 查询所有book后需要返回到数据列表页
-@app.route('/getbooks', methods=['GET', 'POST'])
+@app.route('/getbooks', methods=['GET'])
 def get_books():
-    if request.method == 'GET':
-        return render_template('getbooks.html')
-    else:
-        db = get_db()
-        cursor = db.cursor()
-        sql = 'select * from book;'
-        cursor.execute(query=sql)
-        books = cursor.fetchall()  # 返回一个元组
-        data = []
-        for book in books:
-            b = {}
-            b['book_id'] = book[0]
-            b['book_name'] = book[1]
-            b['book_price'] = book[2]
-            b['book_summary'] = book[3]
-            data.append(b)
-        cursor.close()
-        return data
+    db = get_db()
+    cursor = db.cursor()
+    sql = 'select * from book;'
+    cursor.execute(query=sql)
+    books = cursor.fetchall()  # 返回一个元组
+    data = []
+    for book in books:
+        b = {}
+        b['book_id'] = book[0]
+        b['book_name'] = book[1]
+        b['book_price'] = book[2]
+        b['book_summary'] = book[3]
+        b['book_quantity'] = book[4]
+        data.append(b)
+    cursor.close()
+    return data
 
 
 # 修改book信息
