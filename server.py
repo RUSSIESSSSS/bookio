@@ -12,7 +12,7 @@ from pymysql import Connect
 
 app = Flask(__name__)
 
-app.json.ensure_ascii = False  # 解决编码
+# app.json.ensure_ascii = False  # 解决编码
 CORS(app, supports_credentials=True)  # 解决跨域:协议，域名，端口
 
 
@@ -33,14 +33,15 @@ def add():
         return render_template("add.html")
     else:
         json_data = request.form  # 返回一个字典
-        book_name = json_data.get('book_name')
-        book_price = json_data.get('book_price')
-        book_summary = json_data.get('book_summary')
-        book_quantity = json_data.get('book_quantity')
+        name = json_data.get('book_name')
+        price = json_data.get('book_price')
+        summary = json_data.get('book_summary')
+        quantity = json_data.get('book_quantity')
         db = get_db()
         cursor = db.cursor()
-        sql = 'INSERT INTO book (book_name, book_price, book_summary,book_quantity) VALUES (%s,%s,%s,%s);'
-        cursor.execute(query=sql, args=[book_name, book_price, book_summary, book_quantity])
+        sql = 'INSERT INTO book (name, price, summary,quantity) VALUES (%s,%s,%s,%s);'
+        cursor.execute(query=sql, args=[name, price, summary, quantity])
+        db.commit()
     # return redirect('/index')  # 添加完成之后返回到/index页
     return json_data  # 返回请求的数据
 
@@ -53,6 +54,7 @@ def get_books():
     sql = 'select * from book;'
     cursor.execute(query=sql)
     books = cursor.fetchall()  # 返回一个元组
+    cursor.close()
     data = []
     for book in books:
         b = {}
@@ -62,7 +64,7 @@ def get_books():
         b['book_summary'] = book[3]
         b['book_quantity'] = book[4]
         data.append(b)
-    cursor.close()
+    # return jsonify(data)
     return data
 
 
@@ -73,14 +75,14 @@ def update_book(book_id):
         return render_template("update.html")
     else:
         jsondata = request.form
-        book_name = jsondata.get('book_name')
-        book_price = jsondata.get('book_price')
-        book_summary = jsondata.get('book_summary')
-        book_quantity = jsondata.get('book_quantity')
+        name = jsondata.get('book_name')
+        price = jsondata.get('book_price')
+        summary = jsondata.get('book_summary')
+        quantity = jsondata.get('book_quantity')
         db = get_db()
         cursor = db.cursor()
-        sql = f'''update book set book_name=%s, book_price=%s, book_summary=%s, book_quantity=%s where book_id  ={book_id};'''  # tmd这个sql总是报错
-        cursor.execute(query=sql, args=[book_name, book_price, book_summary, book_quantity])
+        sql = f'''update book set name=%s, price=%s, summary=%s, quantity=%s where bid  ={book_id};'''  # tmd这个sql总是报错
+        cursor.execute(query=sql, args=[name, price, summary, quantity])
         db.commit()
         cursor.close()
         return jsondata
@@ -90,7 +92,7 @@ def update_book(book_id):
 def delete_book_by_book_id(book_id):
     db = get_db()
     cursor = db.cursor()
-    sql = f'''delete from book where book_id ={book_id};'''
+    sql = f'''delete from book where bid ={book_id};'''
     cursor.execute(query=sql)
     db.commit()
     cursor.close()
@@ -119,6 +121,5 @@ def search():
     return l
 
 
-
 if __name__ == '__main__':
-    app.run(port=8888, host='0.0.0.0', debug=True)
+    app.run(port=8888, host='127.0.0.1', debug=True)
